@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, text, TIMESTAMP, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import Base
-
+from sqlalchemy.sql import expression
 
 class EntityBase:
     id = Column(Integer, primary_key=True, nullable=False)
@@ -11,9 +11,9 @@ class EntityBase:
 class Post(Base, EntityBase):
     __tablename__ = "posts"
 
-    title = Column(String, nullable=False)
-    content = Column(String, nullable=False)
-    published = Column(Boolean, nullable=False, server_default='TRUE')
+    title = Column(String(200), nullable=False)
+    content = Column(String(500), nullable=False)
+    published = Column(Boolean, nullable=False, server_default=expression.true())
     owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     owner = relationship("User")
 
@@ -21,8 +21,8 @@ class Post(Base, EntityBase):
 class User(Base, EntityBase):
     __tablename__ = "users"
 
-    email = Column(String, nullable=False, unique=True)
-    password = Column(String, nullable=False)
+    email = Column(String(20), nullable=False, unique=True)
+    password = Column(String(20), nullable=False)
 
 
 class Vote(Base):
