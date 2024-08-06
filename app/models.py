@@ -21,8 +21,8 @@ class Post(Base, EntityBase):
 class User(Base, EntityBase):
     __tablename__ = "users"
 
-    email = Column(String(20), nullable=False, unique=True)
-    password = Column(String(20), nullable=False)
+    email = Column(String(100), nullable=False, unique=True)
+    password = Column(String(100), nullable=False)
 
 
 class Vote(Base):

@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from .routers import post, user, root, auth, vote
 from fastapi.middleware.cors import CORSMiddleware
-
 # Line used to generate the database based on defined models.
 # Commented because we are using "alembic".
 # models.Base.metadata.create_all(bind=engine)
