@@ -1,9 +1,10 @@
 from typing import List
 from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
-from .. import models, schemas
+from .. import models, schemas, oauth2
 from ..database import get_db
 from ..utils import hash_password
+from ..models import User
 
 router = APIRouter(
     prefix="/v1/users",
@@ -12,13 +13,13 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[schemas.User])
-def get_users(db: Session = Depends(get_db)):
+def get_users(db: Session = Depends(get_db), current_user: User = Depends(oauth2.get_current_user)):
     users = db.query(models.User).all()
     return users
 
 
 @router.get("/{user_id}", response_model=schemas.User)
-def get_user(user_id: int, db: Session = Depends(get_db)):
+def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(oauth2.get_current_user)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     check_if_exists(user, user_id)
     return user
