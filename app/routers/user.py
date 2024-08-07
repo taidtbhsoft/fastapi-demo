@@ -1,10 +1,11 @@
-from typing import List
+from typing import List, Optional
 from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from .. import models, schemas, oauth2
 from ..database import get_db
 from ..utils import hash_password
 from ..models import User
+from sqlalchemy import func
 
 router = APIRouter(
     prefix="/v1/users",
@@ -12,10 +13,19 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[schemas.User])
-def get_users(db: Session = Depends(get_db), current_user: User = Depends(oauth2.get_current_user)):
-    users = db.query(models.User).all()
-    return users
+@router.get("/", response_model=schemas.UserOutWithPagination)
+def get_users(limit: Optional[int] = 10, skip: Optional[int] = 0, search: Optional[str] = "", 
+              sort: Optional[str] = "id", order: Optional[str] = "desc",
+              db: Session = Depends(get_db), current_user: User = Depends(oauth2.get_current_user)):
+    users = db.query(models.User)
+    if search:
+         users = users.filter(models.User.email.contains(search))
+    if limit:
+        users = users.limit(limit).offset(skip)
+    users = users.add_columns(func.count().over().label('total')).all()
+    total = users[0][-1] if len(users) else 0
+    
+    return {'data': map(lambda user : user[0], users), 'total':total}
 
 
 @router.get("/{user_id}", response_model=schemas.User)

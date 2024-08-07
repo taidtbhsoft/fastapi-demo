@@ -36,6 +36,7 @@ class PostCreate(PostBase):
 class Post(PostBase):
     id: int
     created_at: datetime
+    updated_at: datetime
     owner_id: int
     owner: User
 
@@ -64,3 +65,17 @@ class TokenData(BaseModel):
 class Vote(BaseModel):
     post_id: int
     direction: conint(le=1)
+
+class PostOutWithPagination(BaseModel):
+    data: list[PostOut] = []
+    total: int
+
+    class Config:
+        from_attributes = True
+
+class UserOutWithPagination(BaseModel):
+    data: list[User] = []
+    total: int
+
+    class Config:
+        from_attributes = True

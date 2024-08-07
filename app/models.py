@@ -6,6 +6,7 @@ from sqlalchemy.sql import expression
 class EntityBase:
     id = Column(Integer, primary_key=True, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=True, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
 
 
 class Post(Base, EntityBase):

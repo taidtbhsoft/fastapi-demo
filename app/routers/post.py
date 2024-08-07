@@ -2,6 +2,7 @@ from typing import List, Optional
 from fastapi import Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import text
 from .. import models, schemas, oauth2
 from ..database import get_db
 from ..models import User
@@ -12,15 +13,25 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[schemas.PostOut])
-def get_posts(limit: int = 10, skip: int = 0, search: Optional[str] = "", db: Session = Depends(get_db),
+@router.get("/", response_model=schemas.PostOutWithPagination)
+def get_posts(limit: Optional[int] = 10, skip: Optional[int] = 0, owner_id: Optional[int] = 0, search: Optional[str] = "", 
+              sort: Optional[str] = "id", order: Optional[str] = "desc", db: Session = Depends(get_db),
               current_user: User = Depends(oauth2.get_current_user)):
-    results = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(models.Vote,
+    data = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(models.Vote,
                                                                                          models.Vote.post_id == models.Post.id,
                                                                                          isouter=True).group_by(
-        models.Post.id).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
-
-    return results
+        models.Post.id)
+    if search:
+        data = data.filter(models.Post.title.contains(search)| models.Post.content.contains(search))
+    if owner_id:
+        data = data.filter(models.Post.owner_id == owner_id)    
+        
+    data = data.order_by(text(f'{sort} {order}'))
+    if limit:
+        data = data.limit(limit).offset(skip)
+    data = data.add_columns(func.count().over().label('total')).all()
+    total = data[0][-1] if len(data) else 0
+    return {'data': data, 'total':total}
 
 
 @router.get("/{post_id}", response_model=schemas.PostOut)
