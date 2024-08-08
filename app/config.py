@@ -9,6 +9,12 @@ class Settings(BaseSettings):
     jwt_secret_key: str
     jwt_algorithm: str
     jwt_access_token_expire_minutes: int = 60
+    mail_username: str
+    mail_password: str
+    mail_from: str
+    mail_port: str
+    mail_server: str
+    mail_from_name: str
 
     class Config:
         env_file = ".env"

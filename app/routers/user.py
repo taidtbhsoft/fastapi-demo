@@ -1,7 +1,7 @@
 from typing import List, Optional, Annotated
 from fastapi import status, HTTPException, Depends, APIRouter, File, UploadFile
 from sqlalchemy.orm import Session
-from .. import models, schemas, oauth2
+from .. import models, schemas, oauth2, email_helper
 from ..database import get_db
 from ..utils import hash_password
 from ..models import User
@@ -38,14 +38,14 @@ def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = D
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.User)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     hashed_password = hash_password(user.password)
     user.password = hashed_password
     new_user = models.User(**user.dict())
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-
+    await email_helper.send_email_async('Sign Up Email',[user.email], """<p>Hi, thanks for using this blog</p> """)
     return new_user
 
 
