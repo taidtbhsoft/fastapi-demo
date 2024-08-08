@@ -12,6 +12,7 @@ class UserCreate(BaseModel):
 class User(BaseModel):
     id: int
     email: str
+    avatar: str
     created_at: datetime
 
     class Config:

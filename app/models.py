@@ -24,6 +24,7 @@ class User(Base, EntityBase):
 
     email = Column(String(100), nullable=False, unique=True)
     password = Column(String(100), nullable=False)
+    avatar = Column(String(200), nullable=False)
 
 
 class Vote(Base):

@@ -1,12 +1,14 @@
 from fastapi import FastAPI
 from .routers import post, user, root, auth, vote
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
 # Line used to generate the database based on defined models.
 # Commented because we are using "alembic".
 # models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
+app.mount("/static", StaticFiles(directory="static"), name="static")
 origins = ["*"]
 
 app.add_middleware(
