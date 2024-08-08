@@ -1,7 +1,7 @@
 from typing import List, Optional
 from fastapi import Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import text
 from .. import models, schemas, oauth2
 from ..database import get_db
@@ -15,12 +15,14 @@ router = APIRouter(
 
 @router.get("/", response_model=schemas.PostOutWithPagination)
 def get_posts(limit: Optional[int] = 10, skip: Optional[int] = 0, owner_id: Optional[int] = 0, search: Optional[str] = "", 
-              sort: Optional[str] = "id", order: Optional[str] = "desc", db: Session = Depends(get_db),
+              sort: Optional[str] = "posts.id", order: Optional[str] = "desc", db: Session = Depends(get_db),
               current_user: User = Depends(oauth2.get_current_user)):
-    data = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(models.Vote,
+    commentAlias = aliased(models.Comment, name="comment")
+    data = db.query(models.Post, func.count(models.Vote.post_id).label("votes"), func.count(commentAlias.post_id).label("comments")).join(models.Vote,
                                                                                          models.Vote.post_id == models.Post.id,
-                                                                                         isouter=True).group_by(
-        models.Post.id)
+                                                                                         isouter=True).join(commentAlias,
+                                                                                         commentAlias.post_id == models.Post.id,
+                                                                                         isouter=True).group_by(models.Post.id)
     if search:
         data = data.filter(models.Post.title.contains(search)| models.Post.content.contains(search))
     if owner_id:
@@ -36,9 +38,12 @@ def get_posts(limit: Optional[int] = 10, skip: Optional[int] = 0, owner_id: Opti
 
 @router.get("/{post_id}", response_model=schemas.PostOut)
 def get_post(post_id: int, db: Session = Depends(get_db), current_user: User = Depends(oauth2.get_current_user)):
-    post = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(models.Vote,
+    commentAlias = aliased(models.Comment, name="comment")
+    post = db.query(models.Post, func.count(models.Vote.post_id).label("votes"),func.count(commentAlias.post_id).label("comments")).join(models.Vote,
                                                                                       models.Vote.post_id == models.Post.id,
-                                                                                      isouter=True).group_by(
+                                                                                      isouter=True).join(commentAlias,
+                                                                                         commentAlias.post_id == models.Post.id,
+                                                                                         isouter=True).group_by(
         models.Post.id).filter(models.Post.id == post_id).first()
 
     check_if_exists(post, post_id)

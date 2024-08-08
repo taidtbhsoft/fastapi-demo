@@ -48,6 +48,7 @@ class Post(PostBase):
 class PostOut(BaseModel):
     Post: Post
     votes: int
+    comments: int
 
     class Config:
         from_attributes = True
@@ -76,6 +77,34 @@ class PostOutWithPagination(BaseModel):
 
 class UserOutWithPagination(BaseModel):
     data: list[User] = []
+    total: int
+
+    class Config:
+        from_attributes = True
+# Comments
+class CommentBase(BaseModel):
+    post_id: int
+    content: str
+
+class Comment(CommentBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    owner_id: int
+    edited: bool = True
+    owner: User
+
+    class Config:
+        from_attributes = True
+
+class CommentCreate(CommentBase):
+    pass
+
+class CommentUpdate(BaseModel):
+    content: str
+
+class CommentOutWithPagination(BaseModel):
+    data: list[Comment] = []
     total: int
 
     class Config:
