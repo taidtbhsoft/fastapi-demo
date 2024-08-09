@@ -1,5 +1,5 @@
 from typing import List, Optional, Annotated
-from fastapi import status, HTTPException, Depends, APIRouter, File, UploadFile
+from fastapi import status, HTTPException, Depends, APIRouter, File, UploadFile, Request
 from sqlalchemy.orm import Session
 from .. import models, schemas, oauth2, email_helper
 from ..database import get_db
@@ -38,14 +38,20 @@ def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = D
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.User)
-async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def create_user(user: schemas.UserCreate, request: Request, db: Session = Depends(get_db)):
+
+    user_existed = db.query(models.User).filter(models.User.email == user.email).first()
+    if user_existed:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
+    domain = request.base_url
     hashed_password = hash_password(user.password)
     user.password = hashed_password
     new_user = models.User(**user.dict())
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    await email_helper.send_email_async('Sign Up Email',[user.email], """<p>Hi, thanks for using this blog</p> """)
+    #await email_helper.send_email_async('Sign Up Email',[user.email], """<p>Hi, thanks for using this blog</p> """)
+    await email_helper.send_email_template_async('Sign Up Email',[user.email], "sign_up_email.html",{'title': 'Hello World',"email": user.email,"domain":domain })
     return new_user
 
 
