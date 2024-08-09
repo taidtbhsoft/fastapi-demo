@@ -36,5 +36,8 @@ http://127.0.0.1:8000/docs
 # Reset the database:
 `alembic downgrade base && alembic upgrade head`
 
+# Copy .env.local to .env and edit
+# Run docker
+`docker compose up`
 # Run migrations with docker:
 `docker-compose exec blogapi alembic upgrade head`
