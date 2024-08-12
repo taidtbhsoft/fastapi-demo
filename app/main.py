@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routers import post, user, root, auth, vote, comment
+from .routers import post, user, root, auth, vote, comment, report
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -25,4 +25,5 @@ app.include_router(post.router)
 app.include_router(user.router)
 app.include_router(vote.router)
 app.include_router(comment.router)
+app.include_router(report.router)
 
