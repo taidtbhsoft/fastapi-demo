@@ -69,6 +69,8 @@ async def update_avatar(user_id: int, file: Annotated[UploadFile, File(descripti
     check_if_exists(user, user_id)
     if user.id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
+    if not file:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No file sent")
     path_upload="static/avatar/"
     file_name= str(round(datetime.now().timestamp()))+'_'+file.filename
     try:
